@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
-from utils.view import create_jednostki_root, lista_jednostek, dodaj_jednostke, usun_jednostke, edytuj_jednostke, pokaz_szczegoly_uzytkownika, aktualizuj_jednostke
+from utils.view import create_jednostki_root,dodaj_jednostke, lista_jednostek, usun_jednostke, edytuj_jednostke, pokaz_szczegoly_uzytkownika, aktualizuj_jednostke
 
 
 class Logowanie:
