@@ -1,5 +1,10 @@
 from tkinter import *
 from tkinter import messagebox
+import requests
+import tkintermapview
+from bs4 import BeautifulSoup
+
+
 
 jednostki = []
 
@@ -8,14 +13,26 @@ class Jednostka:
         self.nazwa = nazwa
         self.miejscowosc = miejscowosc
         self.pracownicy = pracownicy
+        self.wspolrzedne = Jednostka.wspolrzedne(self)
+
+    def wspolrzedne(self) -> list:
+        url: str = f'https://pl.wikipedia.org/wiki/{self.miejscowosc}'
+        response = requests.get(url)
+        response_html = BeautifulSoup(response.text, 'html.parser')
+        return [
+            float(response_html.select('.latitude')[1].text.replace(",", ".")),
+            float(response_html.select('.longitude')[1].text.replace(",", "."))
+        ]
 
 
-def lista_jednostek(listbox_jednostki_strazy):
+def lista_jednostek(listbox_jednostki_strazy, map_widget):
     listbox_jednostki_strazy.delete(0, END)
     for idx, jednostka in enumerate(jednostki):
         listbox_jednostki_strazy.insert(idx, f'{jednostka.nazwa} {jednostka.miejscowosc} {jednostka.pracownicy}')
+        jednostka.marker = map_widget.set_marker(jednostka.wspolrzedne[0], jednostka.wspolrzedne[1],
+                                            text=f"{jednostka.nazwa}")
 
-def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy):
+def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, map_widget):
     nazwa = entry_nazwa.get()
     miejscowosc = entry_miejscowosc.get()
     pracownicy = entry_pracownicy.get()
@@ -23,7 +40,7 @@ def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_je
     print(nazwa, miejscowosc, pracownicy)
     jednostki.append(Jednostka(nazwa, miejscowosc, pracownicy))
 
-    lista_jednostek(listbox_jednostki_strazy)
+    lista_jednostek(listbox_jednostki_strazy, map_widget)
 
     entry_nazwa.delete(0, END)
     entry_miejscowosc.delete(0, END)
@@ -31,14 +48,14 @@ def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_je
 
     entry_nazwa.focus()
 
-def usun_jednostke(listbox_jednostki_strazy):
+def usun_jednostke(listbox_jednostki_strazy, map_widget):
     i = listbox_jednostki_strazy.index(ACTIVE)
     print(i)
     jednostki.pop(i)
-    lista_jednostek(listbox_jednostki_strazy)
+    lista_jednostek(listbox_jednostki_strazy, map_widget)
 
 
-def pokaz_szczegoly_uzytkownika(listbox_jednostki_strazy, label_nazwa_szczegoly_obiektu_wartosc, label_miejscowosc_szczegoly_obiektu_wartosc, label_pracownicy_szczegoly_obiektu_wartosc):
+def pokaz_szczegoly_uzytkownika(listbox_jednostki_strazy, label_nazwa_szczegoly_obiektu_wartosc, label_miejscowosc_szczegoly_obiektu_wartosc, label_pracownicy_szczegoly_obiektu_wartosc, map_widget):
     i = listbox_jednostki_strazy.index(ACTIVE)
     nazwa = jednostki[i].nazwa
     label_nazwa_szczegoly_obiektu_wartosc.config(text=nazwa)
@@ -46,20 +63,22 @@ def pokaz_szczegoly_uzytkownika(listbox_jednostki_strazy, label_nazwa_szczegoly_
     label_miejscowosc_szczegoly_obiektu_wartosc.config(text=miejscowosc)
     pracownicy = jednostki[i].pracownicy
     label_pracownicy_szczegoly_obiektu_wartosc.config(text=pracownicy)
+    map_widget.set_position(jednostki[i].wspolrzedne[0], jednostki[i].wspolrzedne[1])
+    map_widget.set_zoom(12)
 
-def edytuj_jednostke(listbox_jednostki_strazy, entry_nazwa, entry_miejscowosc, entry_pracownicy, button_dodaj_jednostke):
+def edytuj_jednostke(listbox_jednostki_strazy, entry_nazwa, entry_miejscowosc, entry_pracownicy, button_dodaj_jednostke, map_widget):
     i = listbox_jednostki_strazy.index(ACTIVE)
     entry_nazwa.insert(0, jednostki[i].nazwa)
     entry_miejscowosc.insert(0, jednostki[i].miejscowosc)
     entry_pracownicy.insert(0, jednostki[i].pracownicy)
 
-    button_dodaj_jednostke.config(text="Zapisz zmiany", command=lambda: aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke))
+    button_dodaj_jednostke.config(text="Zapisz zmiany", command=lambda: aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke, map_widget))
 
-def aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke):
+def aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke, map_widget):
     jednostki[i].nazwa = entry_nazwa.get()
     jednostki[i].miejscowosc = entry_miejscowosc.get()
     jednostki[i].pracownicy = entry_pracownicy.get()
-    lista_jednostek(listbox_jednostki_strazy)
+    lista_jednostek(listbox_jednostki_strazy, map_widget)
     button_dodaj_jednostke.config(text="Dodaj użytkownika", command=lambda: dodaj_jednostke)
     entry_nazwa.delete(0, END)
     entry_miejscowosc.delete(0, END)
@@ -85,9 +104,9 @@ def create_jednostki_root(root):
 
     label_jednostki_strazy = Label(ramka_jednostki_strazy, text="Lista jednostek straży: ")
     listbox_jednostki_strazy = Listbox(ramka_jednostki_strazy, width=50)
-    button_pokaz_szczegoly = Button(ramka_jednostki_strazy, text="Pokaż szczegóły obiektu", command=lambda: pokaz_szczegoly_uzytkownika(listbox_jednostki_strazy, label_nazwa_szczegoly_obiektu_wartosc, label_miejscowosc_szczegoly_obiektu_wartosc, label_pracownicy_szegoly_obiektu_wartosc))
-    button_usun_obiekkt = Button(ramka_jednostki_strazy, text="Usuń obiekt", command=lambda: usun_jednostke(listbox_jednostki_strazy))
-    button_edytuj_obiekt = Button(ramka_jednostki_strazy, text="Edytuj obiekt", command=lambda: edytuj_jednostke(listbox_jednostki_strazy, entry_nazwa, entry_miejscowosc, entry_pracownicy, button_dodaj_jednostke))
+    button_pokaz_szczegoly = Button(ramka_jednostki_strazy, text="Pokaż szczegóły obiektu", command=lambda: pokaz_szczegoly_uzytkownika(listbox_jednostki_strazy, label_nazwa_szczegoly_obiektu_wartosc, label_miejscowosc_szczegoly_obiektu_wartosc, label_pracownicy_szegoly_obiektu_wartosc, map_widget))
+    button_usun_obiekkt = Button(ramka_jednostki_strazy, text="Usuń obiekt", command=lambda: usun_jednostke(listbox_jednostki_strazy, map_widget))
+    button_edytuj_obiekt = Button(ramka_jednostki_strazy, text="Edytuj obiekt", command=lambda: edytuj_jednostke(listbox_jednostki_strazy, entry_nazwa, entry_miejscowosc, entry_pracownicy, button_dodaj_jednostke, map_widget))
 
     label_jednostki_strazy.grid(row=0, column=0, columnspan=3)
     listbox_jednostki_strazy.grid(row=1, column=0, columnspan=3)
@@ -115,7 +134,7 @@ def create_jednostki_root(root):
     entry_miejscowosc.grid(row=2, column=1)
     entry_pracownicy.grid(row=3, column=1)
 
-    button_dodaj_jednostke = Button(ramka_formularz, text="Dodaj jednostkę do listy", command=lambda: dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy))
+    button_dodaj_jednostke = Button(ramka_formularz, text="Dodaj jednostkę do listy", command=lambda: dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, map_widget))
     button_dodaj_jednostke.grid(row=5, column=1, columnspan=2)
 
     # szczegóły obiektu
@@ -136,6 +155,13 @@ def create_jednostki_root(root):
     label_miejscowosc_szczegoly_obiektu_wartosc.grid(row=1, column=3)
     label_pracownicy_szegoly_obiektu.grid(row=1, column=4)
     label_pracownicy_szegoly_obiektu_wartosc.grid(row=1, column=5)
+
+    map_widget = tkintermapview.TkinterMapView(ramka_szczegoly_jednostki, width=900, height=400)
+    map_widget.set_position(52.2, 21.0)
+    map_widget.set_zoom(8)
+    map_widget.grid(row=2, column=0, columnspan=8)
+    # marker_WAT = map_widget.set_marker(52.25462674857218, 20.900225912403783, text="WAT")
+
 
     return(root)
 
