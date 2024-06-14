@@ -307,51 +307,64 @@ class Pozar:
     def __init__(self, miejscowosc, jednostka):
         self.miejscowosc = miejscowosc
         self.jednostka = jednostka
+        self.wspolrzedne = Pozar.wspolrzedne(self)
 
+    def wspolrzedne(self) -> list:
+        url: str = f'https://pl.wikipedia.org/wiki/{self.miejscowosc}'
+        response = requests.get(url)
+        response_html = BeautifulSoup(response.text, 'html.parser')
+        return [
+            float(response_html.select('.latitude')[1].text.replace(",", ".")),
+            float(response_html.select('.longitude')[1].text.replace(",", "."))
+        ]
 
-def lista_pozarow(listbox_pozary):
+def lista_pozarow(listbox_pozary, map_widget):
     listbox_pozary.delete(0, END)
     for idx, pozar in enumerate(pozary):
         listbox_pozary.insert(idx, f'{pozar.miejscowosc} {pozar.jednostka}')
+        pozar.marker = map_widget.set_marker(pozar.wspolrzedne[0],pozar.wspolrzedne[1],
+                                            text=f"{pozar.jednostka}")
 
-def dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary):
+def dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary, map_widget):
     miejscowosc = entry_miejscowosc.get()
     jednostka = entry_jednostka.get()
 
     print(miejscowosc, jednostka)
     pozary.append(Pozar(miejscowosc, jednostka))
 
-    lista_pozarow(listbox_pozary)
+    lista_pozarow(listbox_pozary, map_widget)
 
     entry_miejscowosc.delete(0, END)
     entry_jednostka.delete(0, END)
 
     entry_miejscowosc.focus()
 
-def usun_pozar(listbox_pozary):
+def usun_pozar(listbox_pozary, map_widget):
     i = listbox_pozary.index(ACTIVE)
     print(i)
     pozary.pop(i)
-    lista_pozarow(listbox_pozary)
+    lista_pozarow(listbox_pozary, map_widget)
 
-def pokaz_szczegoly_pozaru(listbox_pozary, label_miejsowosoc_szczegoly_pozarow_wartosc, label_jednostka_szczegoly_pozarow_wartosc):
+def pokaz_szczegoly_pozaru(listbox_pozary, label_miejsowosoc_szczegoly_pozarow_wartosc, label_jednostka_szczegoly_pozarow_wartosc, map_widget):
     i = listbox_pozary.index(ACTIVE)
     miejscowosc = pozary[i].miejscowosc
     label_miejsowosoc_szczegoly_pozarow_wartosc.config(text=miejscowosc)
     jednostka = pozary[i].jednostka
     label_jednostka_szczegoly_pozarow_wartosc.config(text=jednostka)
+    map_widget.set_position(pozary[i].wspolrzedne[0], pozary[i].wspolrzedne[1])
+    map_widget.set_zoom(12)
 
-def edytuj_pozar(listbox_pozary, entry_miejscowosc, entry_jednostka, button_dodaj_pozar):
+def edytuj_pozar(listbox_pozary, entry_miejscowosc, entry_jednostka, button_dodaj_pozar, map_widget):
     i = listbox_pozary.index(ACTIVE)
     entry_miejscowosc.insert(0, pozary[i].miejscowosc)
     entry_jednostka.insert(0, pozary[i].jednostka)
 
-    button_dodaj_pozar.config(text="Zapisz zmiany", command=lambda: aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar))
+    button_dodaj_pozar.config(text="Zapisz zmiany", command=lambda: aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar, map_widget))
 
-def aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar):
+def aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar, map_widget):
     pozary[i].miejscowosc = entry_miejscowosc.get()
     pozary[i].jednostka = entry_jednostka.get()
-    lista_pozarow(listbox_pozary)
+    lista_pozarow(listbox_pozary, map_widget)
     button_dodaj_pozar.config(text="Dodaj pracownika", command=lambda: dodaj_pozar)
     entry_miejscowosc.delete(0, END)
     entry_jednostka.delete(0, END)
@@ -377,9 +390,9 @@ def create_pozary_root(root):
 
     label_pozary = Label(ramka_pozary, text="Informacje o pożarach: ")
     listbox_pozary = Listbox(ramka_pozary, width=50)
-    button_pokaz_szczegoly = Button(ramka_pozary, text="Pokaż szczegóły", command=lambda: pokaz_szczegoly_pozaru(listbox_pozary, label_miejsowosoc_szczegoly_pozarow_wartosc, label_jednostka_szczegoly_pozarow_wartosc))
-    button_usun_obiekkt = Button(ramka_pozary, text="Usuń obiekt", command=lambda:usun_pozar(listbox_pozary))
-    button_edytuj_obiekt = Button(ramka_pozary, text="Edytuj obiekt", command=lambda:edytuj_pozar(listbox_pozary, entry_miejscowosc, entry_jednostka, button_dodaj_pozar))
+    button_pokaz_szczegoly = Button(ramka_pozary, text="Pokaż szczegóły", command=lambda: pokaz_szczegoly_pozaru(listbox_pozary, label_miejsowosoc_szczegoly_pozarow_wartosc, label_jednostka_szczegoly_pozarow_wartosc, map_widget))
+    button_usun_obiekkt = Button(ramka_pozary, text="Usuń obiekt", command=lambda:usun_pozar(listbox_pozary, map_widget))
+    button_edytuj_obiekt = Button(ramka_pozary, text="Edytuj obiekt", command=lambda:edytuj_pozar(listbox_pozary, entry_miejscowosc, entry_jednostka, button_dodaj_pozar, map_widget))
 
     label_pozary.grid(row=0, column=0, columnspan=3)
     listbox_pozary.grid(row=1, column=0, columnspan=3)
@@ -403,7 +416,7 @@ def create_pozary_root(root):
     entry_miejscowosc.grid(row=1, column=1)
     entry_jednostka.grid(row=2, column=1)
 
-    button_dodaj_pozar = Button(ramka_formularz, text="Dodaj do listy", command=lambda: dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary))
+    button_dodaj_pozar = Button(ramka_formularz, text="Dodaj do listy", command=lambda: dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary, map_widget))
     button_dodaj_pozar.grid(row=5, column=1, columnspan=2)
 
     # szczegóły pozarow
@@ -420,5 +433,10 @@ def create_pozary_root(root):
     label_miejsowosoc_szczegoly_pozarow_wartosc.grid(row=1, column=1)
     label_jednostka_szczegoly_pozarow.grid(row=1, column=2)
     label_jednostka_szczegoly_pozarow_wartosc.grid(row=1, column=3)
+
+    map_widget = tkintermapview.TkinterMapView(ramka_szczegoly_pozarow, width=900, height=400)
+    map_widget.set_position(52.2, 21.0)
+    map_widget.set_zoom(8)
+    map_widget.grid(row=2, column=0, columnspan=8)
 
     return (root)
