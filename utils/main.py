@@ -41,6 +41,20 @@ class Logowanie:
             messagebox.showerror("Błąd", "Nie ma takiego użytkownika")
             self.login_entry.focus()
 
+    def opcje(self):
+        root = Tk()
+        root.title("Baza")
+        root.geometry("200x200")
+
+        label = Label(root, text="Wybierz opcję:")
+        label.pack()
+        button_jednostki = Button(root, text="Jednostki straży pożarnej")
+        button_jednostki.pack()
+        button_pracownicy = Button(root, text="Pracownicy straży pożarnej")
+        button_pracownicy.pack()
+        button_lokalizacje = Button(root, text="Lokalizacje pożarów")
+        button_lokalizacje.pack()
+
         root.mainloop()
 
 root = Tk()
