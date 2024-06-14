@@ -9,11 +9,13 @@ from bs4 import BeautifulSoup
 jednostki = []
 
 class Jednostka:
-    def __init__(self, nazwa, miejscowosc, pracownicy):
+    def __init__(self, nazwa, miejscowosc, pracownicy, map_widget):
         self.nazwa = nazwa
         self.miejscowosc = miejscowosc
         self.pracownicy = pracownicy
         self.wspolrzedne = Jednostka.wspolrzedne(self)
+        self.marker = map_widget.set_marker(self.wspolrzedne[0], self.wspolrzedne[1],
+                                                 text=f"{self.nazwa}")
 
     def wspolrzedne(self) -> list:
         url: str = f'https://pl.wikipedia.org/wiki/{self.miejscowosc}'
@@ -29,8 +31,7 @@ def lista_jednostek(listbox_jednostki_strazy, map_widget):
     listbox_jednostki_strazy.delete(0, END)
     for idx, jednostka in enumerate(jednostki):
         listbox_jednostki_strazy.insert(idx, f'{jednostka.nazwa} {jednostka.miejscowosc} {jednostka.pracownicy}')
-        jednostka.marker = map_widget.set_marker(jednostka.wspolrzedne[0], jednostka.wspolrzedne[1],
-                                            text=f"{jednostka.nazwa}")
+
 
 def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, map_widget):
     nazwa = entry_nazwa.get()
@@ -38,7 +39,7 @@ def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_je
     pracownicy = entry_pracownicy.get()
 
     print(nazwa, miejscowosc, pracownicy)
-    jednostki.append(Jednostka(nazwa, miejscowosc, pracownicy))
+    jednostki.append(Jednostka(nazwa, miejscowosc, pracownicy, map_widget))
 
     lista_jednostek(listbox_jednostki_strazy, map_widget)
 
@@ -51,6 +52,7 @@ def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_je
 def usun_jednostke(listbox_jednostki_strazy, map_widget):
     i = listbox_jednostki_strazy.index(ACTIVE)
     print(i)
+    jednostki[i].marker.delete()
     jednostki.pop(i)
     lista_jednostek(listbox_jednostki_strazy, map_widget)
 
@@ -78,6 +80,10 @@ def aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, li
     jednostki[i].nazwa = entry_nazwa.get()
     jednostki[i].miejscowosc = entry_miejscowosc.get()
     jednostki[i].pracownicy = entry_pracownicy.get()
+    jednostki[i].wspolrzedne = Jednostka.wspolrzedne(jednostki[i])
+    jednostki[i].marker.delete()
+    jednostki[i].marker = map_widget.set_marker(jednostki[i].wspolrzedne[0], jednostki[i].wspolrzedne[1],
+                                             text=f"{jednostki[i].nazwa}")
     lista_jednostek(listbox_jednostki_strazy, map_widget)
     button_dodaj_jednostke.config(text="Dodaj użytkownika", command=lambda: dodaj_jednostke)
     entry_nazwa.delete(0, END)
@@ -304,10 +310,12 @@ def create_pracownicy_root(root):
 pozary = []
 
 class Pozar:
-    def __init__(self, miejscowosc, jednostka):
+    def __init__(self, miejscowosc, jednostka, map_widget):
         self.miejscowosc = miejscowosc
         self.jednostka = jednostka
         self.wspolrzedne = Pozar.wspolrzedne(self)
+        self.marker = map_widget.set_marker(self.wspolrzedne[0], self.wspolrzedne[1],
+                                             text=f"{self.jednostka}")
 
     def wspolrzedne(self) -> list:
         url: str = f'https://pl.wikipedia.org/wiki/{self.miejscowosc}'
@@ -318,19 +326,19 @@ class Pozar:
             float(response_html.select('.longitude')[1].text.replace(",", "."))
         ]
 
+
 def lista_pozarow(listbox_pozary, map_widget):
     listbox_pozary.delete(0, END)
     for idx, pozar in enumerate(pozary):
         listbox_pozary.insert(idx, f'{pozar.miejscowosc} {pozar.jednostka}')
-        pozar.marker = map_widget.set_marker(pozar.wspolrzedne[0],pozar.wspolrzedne[1],
-                                            text=f"{pozar.jednostka}")
+
 
 def dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary, map_widget):
     miejscowosc = entry_miejscowosc.get()
     jednostka = entry_jednostka.get()
 
     print(miejscowosc, jednostka)
-    pozary.append(Pozar(miejscowosc, jednostka))
+    pozary.append(Pozar(miejscowosc, jednostka, map_widget))
 
     lista_pozarow(listbox_pozary, map_widget)
 
@@ -342,6 +350,7 @@ def dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary, map_widget):
 def usun_pozar(listbox_pozary, map_widget):
     i = listbox_pozary.index(ACTIVE)
     print(i)
+    pozary[i].marker.delete()
     pozary.pop(i)
     lista_pozarow(listbox_pozary, map_widget)
 
@@ -364,6 +373,10 @@ def edytuj_pozar(listbox_pozary, entry_miejscowosc, entry_jednostka, button_doda
 def aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar, map_widget):
     pozary[i].miejscowosc = entry_miejscowosc.get()
     pozary[i].jednostka = entry_jednostka.get()
+    pozary[i].wspolrzedne = Pozar.wspolrzedne(pozary[i])
+    pozary[i].marker.delete()
+    pozary[i].marker = map_widget.set_marker(pozary[i].wspolrzedne[0], pozary[i].wspolrzedne[1],
+                                            text=f"{pozary[i].jednostka}")
     lista_pozarow(listbox_pozary, map_widget)
     button_dodaj_pozar.config(text="Dodaj pracownika", command=lambda: dodaj_pozar)
     entry_miejscowosc.delete(0, END)
