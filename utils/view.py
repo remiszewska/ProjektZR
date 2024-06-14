@@ -275,3 +275,124 @@ def create_pracownicy_root(root):
 
     return (root)
 
+pozary = []
+
+class Pozar:
+    def __init__(self, miejscowosc, jednostka):
+        self.miejscowosc = miejscowosc
+        self.jednostka = jednostka
+
+
+def lista_pozarow(listbox_pozary):
+    listbox_pozary.delete(0, END)
+    for idx, pozar in enumerate(pozary):
+        listbox_pozary.insert(idx, f'{pozar.miejscowosc} {pozar.jednostka}')
+
+def dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary):
+    miejscowosc = entry_miejscowosc.get()
+    jednostka = entry_jednostka.get()
+
+    print(miejscowosc, jednostka)
+    pozary.append(Pozar(miejscowosc, jednostka))
+
+    lista_pozarow(listbox_pozary)
+
+    entry_miejscowosc.delete(0, END)
+    entry_jednostka.delete(0, END)
+
+    entry_miejscowosc.focus()
+
+def usun_pozar(listbox_pozary):
+    i = listbox_pozary.index(ACTIVE)
+    print(i)
+    pozary.pop(i)
+    lista_pozarow(listbox_pozary)
+
+def pokaz_szczegoly_pozaru(listbox_pozary, label_miejsowosoc_szczegoly_pozarow_wartosc, label_jednostka_szczegoly_pozarow_wartosc):
+    i = listbox_pozary.index(ACTIVE)
+    miejscowosc = pozary[i].miejscowosc
+    label_miejsowosoc_szczegoly_pozarow_wartosc.config(text=miejscowosc)
+    jednostka = pozary[i].jednostka
+    label_jednostka_szczegoly_pozarow_wartosc.config(text=jednostka)
+
+def edytuj_pozar(listbox_pozary, entry_miejscowosc, entry_jednostka, button_dodaj_pozar):
+    i = listbox_pozary.index(ACTIVE)
+    entry_miejscowosc.insert(0, pozary[i].miejscowosc)
+    entry_jednostka.insert(0, pozary[i].jednostka)
+
+    button_dodaj_pozar.config(text="Zapisz zmiany", command=lambda: aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar))
+
+def aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar):
+    pozary[i].miejscowosc = entry_miejscowosc.get()
+    pozary[i].jednostka = entry_jednostka.get()
+    lista_pozarow(listbox_pozary)
+    button_dodaj_pozar.config(text="Dodaj pracownika", command=lambda: dodaj_pozar)
+    entry_miejscowosc.delete(0, END)
+    entry_jednostka.delete(0, END)
+    entry_miejscowosc.focus()
+
+
+def create_pozary_root(root):
+    pozary_root = Toplevel(root)
+    pozary_root.title("Miejsca pożarów")
+    pozary_root.geometry("1024x760")
+
+    # ramki do porządkowania struktury
+
+    ramka_pozary = Frame(pozary_root)
+    ramka_formularz = Frame(pozary_root)
+    ramka_szczegoly_pozarow = Frame(pozary_root)
+
+    ramka_pozary.grid(column=0, row=0, padx=50)
+    ramka_formularz.grid(column=1, row=0)
+    ramka_szczegoly_pozarow.grid(column=0, row=1, columnspan=2)
+
+    # lista obiektów
+
+    label_pozary = Label(ramka_pozary, text="Informacje o pożarach: ")
+    listbox_pozary = Listbox(ramka_pozary, width=50)
+    button_pokaz_szczegoly = Button(ramka_pozary, text="Pokaż szczegóły", command=lambda: pokaz_szczegoly_pozaru(listbox_pozary, label_miejsowosoc_szczegoly_pozarow_wartosc, label_jednostka_szczegoly_pozarow_wartosc))
+    button_usun_obiekkt = Button(ramka_pozary, text="Usuń obiekt", command=lambda:usun_pozar(listbox_pozary))
+    button_edytuj_obiekt = Button(ramka_pozary, text="Edytuj obiekt", command=lambda:edytuj_pozar(listbox_pozary, entry_miejscowosc, entry_jednostka, button_dodaj_pozar))
+
+    label_pozary.grid(row=0, column=0, columnspan=3)
+    listbox_pozary.grid(row=1, column=0, columnspan=3)
+    button_pokaz_szczegoly.grid(row=2, column=0)
+    button_usun_obiekkt.grid(row=2, column=1)
+    button_edytuj_obiekt.grid(row=2, column=2)
+
+    # formularz pozary
+
+    label_formularz = Label(ramka_formularz, text="Formularz: ")
+    label_miejscowosc = Label(ramka_formularz, text="Miejsowość: ")
+    label_jednostka = Label(ramka_formularz, text="Jednostka: ")
+
+    entry_miejscowosc = Entry(ramka_formularz)
+    entry_jednostka = Entry(ramka_formularz)
+
+    label_formularz.grid(row=0, column=0, columnspan=2)
+    label_miejscowosc.grid(row=1, column=0, sticky=W)
+    label_jednostka.grid(row=2, column=0, sticky=W)
+
+    entry_miejscowosc.grid(row=1, column=1)
+    entry_jednostka.grid(row=2, column=1)
+
+    button_dodaj_pozar = Button(ramka_formularz, text="Dodaj do listy", command=lambda: dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary))
+    button_dodaj_pozar.grid(row=5, column=1, columnspan=2)
+
+    # szczegóły pozarow
+
+    label_szczegoly_pozarow = Label(ramka_szczegoly_pozarow, text="Szczegóły dotyczące pożaru: ")
+    label_miejsowosoc_szczegoly_pozarow = Label(ramka_szczegoly_pozarow, text="Miejsce pożaru: ")
+    label_jednostka_szczegoly_pozarow = Label(ramka_szczegoly_pozarow, text="Jednostka: ")
+
+    label_miejsowosoc_szczegoly_pozarow_wartosc = Label(ramka_szczegoly_pozarow, text="...")
+    label_jednostka_szczegoly_pozarow_wartosc = Label(ramka_szczegoly_pozarow, text="...")
+
+    label_szczegoly_pozarow.grid(row=0, column=0, sticky=W)
+    label_miejsowosoc_szczegoly_pozarow.grid(row=1, column=0, sticky=W)
+    label_miejsowosoc_szczegoly_pozarow_wartosc.grid(row=1, column=1)
+    label_jednostka_szczegoly_pozarow.grid(row=1, column=2)
+    label_jednostka_szczegoly_pozarow_wartosc.grid(row=1, column=3)
+
+    return (root)
