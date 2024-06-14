@@ -139,3 +139,139 @@ def create_jednostki_root(root):
 
     return(root)
 
+pracownicy = []
+
+class Pracownik:
+    def __init__(self, imie, nazwisko, jednostka):
+        self.imie = imie
+        self.nazwisko = nazwisko
+        self.jednostka = jednostka
+
+def lista_pracownikow(listbox_pracownicy_strazy):
+    listbox_pracownicy_strazy.delete(0, END)
+    for idx, pracownik in enumerate(pracownicy):
+        listbox_pracownicy_strazy.insert(idx, f'{pracownik.imie} {pracownik.nazwisko} {pracownik.jednostka}')
+
+def dodaj_pracownika(entry_imie, entry_nazwisko, entry_jednostka, listbox_pracownicy_strazy):
+    imie = entry_imie.get()
+    nazwisko = entry_nazwisko.get()
+    jednostka = entry_jednostka.get()
+    print(imie, nazwisko, jednostka)
+    pracownicy.append(Pracownik(imie, nazwisko, jednostka))
+
+    lista_pracownikow(listbox_pracownicy_strazy)
+
+    entry_imie.delete(0, END)
+    entry_nazwisko.delete(0, END)
+    entry_jednostka.delete(0, END)
+
+    entry_imie.focus()
+
+def usun_pracownika(listbox_pracownicy_strazy):
+    i = listbox_pracownicy_strazy.index(ACTIVE)
+    print(i)
+    pracownicy.pop(i)
+    lista_pracownikow(listbox_pracownicy_strazy)
+
+def pokaz_szczegoly_pracownika(listbox_pracownicy_strazy,  label_imie_szczegoly_pracownikow_wartosc, label_nazwisko_szczegoly_pracownikow_wartosc, label_jednostka_szczegoly_pracownikow_wartosc):
+    i = listbox_pracownicy_strazy.index(ACTIVE)
+    imie = pracownicy[i].imie
+    label_imie_szczegoly_pracownikow_wartosc.config(text=imie)
+    nazwisko = pracownicy[i].nazwisko
+    label_nazwisko_szczegoly_pracownikow_wartosc.config(text=nazwisko)
+    jednostka = pracownicy[i].jednostka
+    label_jednostka_szczegoly_pracownikow_wartosc.config(text=jednostka)
+
+def edytuj_pracownika(listbox_pracownicy_strazy, entry_imie, entry_nazwisko, entry_jednostka, button_dodaj_pracownika):
+    i = listbox_pracownicy_strazy.index(ACTIVE)
+    entry_imie.insert(0, pracownicy[i].imie)
+    entry_nazwisko.insert(0, pracownicy[i].nazwisko)
+    entry_jednostka.insert(0, pracownicy[i].jednostka)
+
+    button_dodaj_pracownika.config(text="Zapisz zmiany", command=lambda: aktualizuj_pracownika(i, entry_imie, entry_nazwisko, entry_jednostka, listbox_pracownicy_strazy, button_dodaj_pracownika))
+
+def aktualizuj_pracownika(i, entry_imie, entry_nazwisko, entry_jednostka, listbox_pracownicy_strazy, button_dodaj_pracownika):
+    pracownicy[i].imie = entry_imie.get()
+    pracownicy[i].nazwisko = entry_nazwisko.get()
+    pracownicy[i].jednostka = entry_jednostka.get()
+    lista_pracownikow(listbox_pracownicy_strazy)
+    button_dodaj_pracownika.config(text="Dodaj pracownika", command=lambda: dodaj_pracownika)
+    entry_imie.delete(0, END)
+    entry_nazwisko.delete(0, END)
+    entry_jednostka.delete(0, END)
+    entry_imie.focus()
+
+
+def create_pracownicy_root(root):
+    pracownicy_root = Toplevel(root)
+    pracownicy_root.title("Pracownicy straży pożarnej")
+    pracownicy_root.geometry("1024x760")
+
+    # ramki do porządkowania struktury
+
+    ramka_pracownicy_strazy = Frame(pracownicy_root)
+    ramka_formularz = Frame(pracownicy_root)
+    ramka_szczegoly_pracownikow = Frame(pracownicy_root)
+
+    ramka_pracownicy_strazy.grid(column=0, row=0, padx=50)
+    ramka_formularz.grid(column=1, row=0)
+    ramka_szczegoly_pracownikow.grid(column=0, row=1, columnspan=2)
+
+    # lista obiektów
+
+    label_pracownicy_strazy = Label(ramka_pracownicy_strazy, text="Lista pracowników straży pożarnej: ")
+    listbox_pracownicy_strazy = Listbox(ramka_pracownicy_strazy, width=50)
+    button_pokaz_szczegoly = Button(ramka_pracownicy_strazy, text="Pokaż szczegóły", command=lambda:pokaz_szczegoly_pracownika(listbox_pracownicy_strazy,  label_imie_szczegoly_pracownikow_wartosc, label_nazwisko_szczegoly_pracownikow_wartosc, label_jednostka_szegoly_pracownikow_wartosc))
+    button_usun_obiekkt = Button(ramka_pracownicy_strazy, text="Usuń obiekt", command=lambda:usun_pracownika(listbox_pracownicy_strazy))
+    button_edytuj_obiekt = Button(ramka_pracownicy_strazy, text="Edytuj obiekt", command=lambda:edytuj_pracownika(listbox_pracownicy_strazy, entry_imie, entry_nazwisko, entry_jednostka, button_dodaj_pracownika))
+
+    label_pracownicy_strazy.grid(row=0, column=0, columnspan=3)
+    listbox_pracownicy_strazy.grid(row=1, column=0, columnspan=3)
+    button_pokaz_szczegoly.grid(row=2, column=0)
+    button_usun_obiekkt.grid(row=2, column=1)
+    button_edytuj_obiekt.grid(row=2, column=2)
+
+    # formularz pracownikow
+
+    label_formularz = Label(ramka_formularz, text="Formularz: ")
+    label_imie = Label(ramka_formularz, text="Imię: ")
+    label_nazwisko = Label(ramka_formularz, text="Nazwisko: ")
+    label_jednostka = Label(ramka_formularz, text="Jednostka: ")
+
+    entry_imie = Entry(ramka_formularz)
+    entry_nazwisko = Entry(ramka_formularz)
+    entry_jednostka = Entry(ramka_formularz)
+
+    label_formularz.grid(row=0, column=0, columnspan=2)
+    label_imie.grid(row=1, column=0, sticky=W)
+    label_nazwisko.grid(row=2, column=0, sticky=W)
+    label_jednostka.grid(row=3, column=0, sticky=W)
+
+    entry_imie.grid(row=1, column=1)
+    entry_nazwisko.grid(row=2, column=1)
+    entry_jednostka.grid(row=3, column=1)
+
+    button_dodaj_pracownika = Button(ramka_formularz, text="Dodaj pracownika do listy", command=lambda:dodaj_pracownika(entry_imie, entry_nazwisko, entry_jednostka, listbox_pracownicy_strazy))
+    button_dodaj_pracownika.grid(row=5, column=1, columnspan=2)
+
+    # szczegóły pracownikow
+
+    label_szczegoly_pracownikow = Label(ramka_szczegoly_pracownikow, text="Szczegóły dotyczące pracownika: ")
+    label_imie_szczegoly_pracownikow = Label(ramka_szczegoly_pracownikow, text="Imię: ")
+    label_nazwisko_szczegoly_pracownikow = Label(ramka_szczegoly_pracownikow, text="Nazwisko: ")
+    label_jednostka_szegoly_pracownikow = Label(ramka_szczegoly_pracownikow, text="Jednostka: ")
+
+    label_imie_szczegoly_pracownikow_wartosc = Label(ramka_szczegoly_pracownikow, text="...")
+    label_nazwisko_szczegoly_pracownikow_wartosc = Label(ramka_szczegoly_pracownikow, text="...")
+    label_jednostka_szegoly_pracownikow_wartosc = Label(ramka_szczegoly_pracownikow, text="...:")
+
+    label_szczegoly_pracownikow.grid(row=0, column=0, sticky=W)
+    label_imie_szczegoly_pracownikow.grid(row=1, column=0, sticky=W)
+    label_imie_szczegoly_pracownikow_wartosc.grid(row=1, column=1)
+    label_nazwisko_szczegoly_pracownikow.grid(row=1, column=2)
+    label_nazwisko_szczegoly_pracownikow_wartosc.grid(row=1, column=3)
+    label_jednostka_szegoly_pracownikow.grid(row=1, column=4)
+    label_jednostka_szegoly_pracownikow_wartosc.grid(row=1, column=5)
+
+    return (root)
+

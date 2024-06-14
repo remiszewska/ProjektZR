@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
-from utils.view import create_jednostki_root,dodaj_jednostke, lista_jednostek, usun_jednostke, edytuj_jednostke, pokaz_szczegoly_uzytkownika, aktualizuj_jednostke
+from utils.view import create_jednostki_root,create_pracownicy_root, lista_jednostek, usun_jednostke, edytuj_jednostke, pokaz_szczegoly_uzytkownika, aktualizuj_jednostke, lista_pracownikow, dodaj_pracownika, usun_pracownika, edytuj_pracownika, pokaz_szczegoly_pracownika, aktualizuj_pracownika
 
 
 class Logowanie:
@@ -52,7 +52,8 @@ class Logowanie:
         button_jednostki = Button(root, text="Jednostki straży pożarnej",
                                   command=lambda: create_jednostki_root(root))
         button_jednostki.pack()
-        button_pracownicy = Button(root, text="Pracownicy straży pożarnej")
+        button_pracownicy = Button(root, text="Pracownicy straży pożarnej",
+                                   command=lambda: create_pracownicy_root(root))
         button_pracownicy.pack()
         button_lokalizacje = Button(root, text="Lokalizacje pożarów")
         button_lokalizacje.pack()
