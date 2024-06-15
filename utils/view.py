@@ -82,10 +82,18 @@ def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_je
 
 def usun_jednostke(listbox_jednostki_strazy, map_widget):
     i = listbox_jednostki_strazy.index(ACTIVE)
-    print(i)
-    jednostki[i].marker.delete()
+    jednostka =jednostki[i]
+    jednostka.set_marker_jednostki(map_widget)
+    cursor = db_params.cursor()
+    sql_delete_straz = f"DELETE FROM public.straz WHERE id = %s"
+    cursor.execute(sql_delete_straz, (jednostka.id,))
+    db_params.commit()
+    cursor.close()
+
+    jednostka.marker.delete()
+    markers.remove(jednostka.marker)
     jednostki.pop(i)
-    lista_jednostek(listbox_jednostki_strazy, map_widget)
+    lista_jednostek(listbox_jednostki_strazy)
 
 
 def pokaz_szczegoly_uzytkownika(listbox_jednostki_strazy, label_nazwa_szczegoly_obiektu_wartosc, label_miejscowosc_szczegoly_obiektu_wartosc, label_pracownicy_szczegoly_obiektu_wartosc, map_widget):
