@@ -104,7 +104,7 @@ def pokaz_szczegoly_uzytkownika(listbox_jednostki_strazy, label_nazwa_szczegoly_
     label_miejscowosc_szczegoly_obiektu_wartosc.config(text=miejscowosc)
     pracownicy = jednostki[i].pracownicy
     label_pracownicy_szczegoly_obiektu_wartosc.config(text=pracownicy)
-    map_widget.set_position(jednostki[i].wspolrzedne[0], jednostki[i].wspolrzedne[1])
+    map_widget.set_position(float(jednostki[i].wspolrzedne[0]), float(jednostki[i].wspolrzedne[1]))
     map_widget.set_zoom(12)
 
 def edytuj_jednostke(listbox_jednostki_strazy, entry_nazwa, entry_miejscowosc, entry_pracownicy, button_dodaj_jednostke, map_widget):
@@ -115,15 +115,26 @@ def edytuj_jednostke(listbox_jednostki_strazy, entry_nazwa, entry_miejscowosc, e
 
     button_dodaj_jednostke.config(text="Zapisz zmiany", command=lambda: aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke, map_widget))
 
+
 def aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke, map_widget):
+    jednostka = jednostki[i]
+    jednostka.set_marker_jednostki(map_widget)
     jednostki[i].nazwa = entry_nazwa.get()
     jednostki[i].miejscowosc = entry_miejscowosc.get()
     jednostki[i].pracownicy = entry_pracownicy.get()
-    jednostki[i].wspolrzedne = Jednostka.wspolrzedne(jednostki[i])
-    jednostki[i].marker.delete()
-    jednostki[i].marker = map_widget.set_marker(jednostki[i].wspolrzedne[0], jednostki[i].wspolrzedne[1],
+    jednostki[i].wspolrzedne = get_wspolrzedne(entry_miejscowosc.get())
+    jednostka.marker.delete()
+    markers.remove(jednostka.marker)
+
+    jednostka.marker = map_widget.set_marker(jednostki[i].wspolrzedne[0], jednostki[i].wspolrzedne[1],
                                              text=f"{jednostki[i].nazwa}")
-    lista_jednostek(listbox_jednostki_strazy, map_widget)
+    markers.append(jednostka.marker)
+    cursor = db_params.cursor()
+    sql_update_straz = f"UPDATE public.straz SET nazwa = %s, miejscowosc = %s, pracownicy = %s, wspolrzedne = ST_GeomFromText(%s) WHERE id = %s"
+    cursor.execute(sql_update_straz, (jednostka.nazwa, jednostka.miejscowosc, jednostka.pracownicy, f'POINT({jednostka.wspolrzedne[1]} {jednostka.wspolrzedne[0]})', jednostka.id))
+    db_params.commit()
+    cursor.close()
+    lista_jednostek(listbox_jednostki_strazy)
     button_dodaj_jednostke.config(text="Dodaj użytkownika", command=lambda: dodaj_jednostke)
     entry_nazwa.delete(0, END)
     entry_miejscowosc.delete(0, END)
