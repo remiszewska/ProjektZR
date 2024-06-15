@@ -17,14 +17,14 @@ jednostki = []
 markers = []
 
 class Jednostka:
-    def __init__(self, nazwa, miejscowosc, pracownicy, map_widget):
+    def __init__(self, id, nazwa, miejscowosc, pracownicy, wspolrzedne):
         self.marker = None
+        self.id = id
         self.nazwa = nazwa
         self.miejscowosc = miejscowosc
         self.pracownicy = pracownicy
-        self.wspolrzedne = Jednostka.wspolrzedne(self)
-        self.marker = map_widget.set_marker(self.wspolrzedne[0], self.wspolrzedne[1],
-                                                 text=f"{self.nazwa}")
+        self.wspolrzedne = wspolrzedne
+
 
     def set_marker_jednostki(self, map_widget):
         self.marker = map_widget.set_marker(float(self.wspolrzedne[0]), float(self.wspolrzedne[1]),
@@ -59,11 +59,20 @@ def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_je
     nazwa = entry_nazwa.get()
     miejscowosc = entry_miejscowosc.get()
     pracownicy = entry_pracownicy.get()
+    wspolrzedne = get_wspolrzedne(miejscowosc)
 
-    print(nazwa, miejscowosc, pracownicy)
-    jednostki.append(Jednostka(nazwa, miejscowosc, pracownicy, map_widget))
+    cursor = db_params.cursor()
+    sql_insert_straz = (f"INSERT INTO public.straz (nazwa, miejscowosc, pracownicy, wspolrzedne) VALUES (%s, %s, %s, ST_GeomFromText(%s)) RETURNING id")
+    cursor.execute(sql_insert_straz,(nazwa, miejscowosc, pracownicy, f"POINT({wspolrzedne[1]} {wspolrzedne[0]})"))
+    jednostka_id = cursor.fetchone()[0]
+    db_params.commit()
+    cursor.close()
 
-    lista_jednostek(listbox_jednostki_strazy, map_widget)
+    jednostka = Jednostka(id = jednostka_id, nazwa=nazwa, miejscowosc=miejscowosc, pracownicy=pracownicy, wspolrzedne=wspolrzedne)
+    jednostka.set_marker_jednostki(map_widget)
+    jednostki.append(jednostka)
+
+    lista_jednostek(listbox_jednostki_strazy)
 
     entry_nazwa.delete(0, END)
     entry_miejscowosc.delete(0, END)
