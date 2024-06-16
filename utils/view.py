@@ -40,6 +40,10 @@ def get_wspolrzedne(miejscowosc) -> list:
         float(response_html.select('.longitude')[1].text.replace(",", "."))
     ]
 
+def czyszczenie_markerow(markers) -> None:
+    for marker in markers:
+        marker.delete()
+    markers.clear()
 
 def lista_jednostek(listbox_jednostki_strazy):
     cursor = db_params.cursor()
@@ -109,22 +113,25 @@ def pokaz_szczegoly_uzytkownika(listbox_jednostki_strazy, label_nazwa_szczegoly_
 
 def edytuj_jednostke(listbox_jednostki_strazy, entry_nazwa, entry_miejscowosc, entry_pracownicy, button_dodaj_jednostke, map_widget):
     i = listbox_jednostki_strazy.index(ACTIVE)
+    entry_nazwa.delete(0, END)
+    entry_miejscowosc.delete(0, END)
+    entry_pracownicy.delete(0, END)
     entry_nazwa.insert(0, jednostki[i].nazwa)
     entry_miejscowosc.insert(0, jednostki[i].miejscowosc)
     entry_pracownicy.insert(0, jednostki[i].pracownicy)
+
+    czyszczenie_markerow(markers)
+
 
     button_dodaj_jednostke.config(text="Zapisz zmiany", command=lambda: aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke, map_widget))
 
 
 def aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke, map_widget):
     jednostka = jednostki[i]
-    jednostka.set_marker_jednostki(map_widget)
     jednostki[i].nazwa = entry_nazwa.get()
     jednostki[i].miejscowosc = entry_miejscowosc.get()
     jednostki[i].pracownicy = entry_pracownicy.get()
     jednostki[i].wspolrzedne = get_wspolrzedne(entry_miejscowosc.get())
-    jednostka.marker.delete()
-    markers.remove(jednostka.marker)
 
     jednostka.marker = map_widget.set_marker(jednostki[i].wspolrzedne[0], jednostki[i].wspolrzedne[1],
                                              text=f"{jednostki[i].nazwa}")
