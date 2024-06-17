@@ -330,7 +330,7 @@ def aktualizuj_pracownika(i, entry_imie, entry_nazwisko, entry_jednostka, listbo
 def create_pracownicy_root(root):
     pracownicy_root = Toplevel(root)
     pracownicy_root.title("Pracownicy straży pożarnej")
-    pracownicy_root.geometry("1024x760")
+    pracownicy_root.geometry("760x460")
 
     # ramki do porządkowania struktury
 
@@ -567,7 +567,6 @@ def create_pozary_root(root):
     map_widget.grid(row=2, column=0, columnspan=8)
 
     lista_pozarow(listbox_pozary, map_widget)
-
     for pozar in pozary:
         pozar.set_marker_pozary(map_widget)
     return (root)

@@ -44,8 +44,8 @@ class Logowanie:
 
     def opcje(self):
         root = Tk()
-        root.title("Baza")
-        root.geometry("200x200")
+        root.title("Menu Główne")
+        root.geometry("300x200")
 
         label = Label(root, text="Wybierz opcję:")
         label.pack()
