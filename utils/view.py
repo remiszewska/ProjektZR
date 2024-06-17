@@ -25,7 +25,6 @@ class Jednostka:
         self.pracownicy = pracownicy
         self.wspolrzedne = wspolrzedne
 
-
     def set_marker_jednostki(self, map_widget):
         self.marker = map_widget.set_marker(float(self.wspolrzedne[0]), float(self.wspolrzedne[1]),
                                             text=f"{self.nazwa}")
@@ -44,6 +43,7 @@ def czyszczenie_markerow(markers) -> None:
     for marker in markers:
         marker.delete()
     markers.clear()
+
 
 def lista_jednostek(listbox_jednostki_strazy):
     cursor = db_params.cursor()
@@ -72,7 +72,7 @@ def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_je
     db_params.commit()
     cursor.close()
 
-    jednostka = Jednostka(id = jednostka_id, nazwa=nazwa, miejscowosc=miejscowosc, pracownicy=pracownicy, wspolrzedne=wspolrzedne)
+    jednostka = Jednostka(id=jednostka_id, nazwa=nazwa, miejscowosc=miejscowosc, pracownicy=pracownicy, wspolrzedne=wspolrzedne)
     jednostka.set_marker_jednostki(map_widget)
     jednostki.append(jednostka)
 
@@ -84,18 +84,18 @@ def dodaj_jednostke(entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_je
 
     entry_nazwa.focus()
 
+
 def usun_jednostke(listbox_jednostki_strazy, map_widget):
     i = listbox_jednostki_strazy.index(ACTIVE)
-    jednostka =jednostki[i]
+    jednostka = jednostki[i]
     jednostka.set_marker_jednostki(map_widget)
     cursor = db_params.cursor()
     sql_delete_straz = f"DELETE FROM public.straz WHERE id = %s"
     cursor.execute(sql_delete_straz, (jednostka.id,))
     db_params.commit()
     cursor.close()
-
-    jednostka.marker.delete()
     markers.remove(jednostka.marker)
+    jednostka.marker.delete()
     jednostki.pop(i)
     lista_jednostek(listbox_jednostki_strazy)
 
@@ -125,7 +125,6 @@ def edytuj_jednostke(listbox_jednostki_strazy, entry_nazwa, entry_miejscowosc, e
 
     button_dodaj_jednostke.config(text="Zapisz zmiany", command=lambda: aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke, map_widget))
 
-
 def aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, listbox_jednostki_strazy, button_dodaj_jednostke, map_widget):
     jednostka = jednostki[i]
     jednostki[i].nazwa = entry_nazwa.get()
@@ -133,9 +132,11 @@ def aktualizuj_jednostke(i, entry_nazwa, entry_miejscowosc, entry_pracownicy, li
     jednostki[i].pracownicy = entry_pracownicy.get()
     jednostki[i].wspolrzedne = get_wspolrzedne(entry_miejscowosc.get())
 
+
     jednostka.marker = map_widget.set_marker(jednostki[i].wspolrzedne[0], jednostki[i].wspolrzedne[1],
                                              text=f"{jednostki[i].nazwa}")
     markers.append(jednostka.marker)
+
     cursor = db_params.cursor()
     sql_update_straz = f"UPDATE public.straz SET nazwa = %s, miejscowosc = %s, pracownicy = %s, wspolrzedne = ST_GeomFromText(%s) WHERE id = %s"
     cursor.execute(sql_update_straz, (jednostka.nazwa, jednostka.miejscowosc, jednostka.pracownicy, f'POINT({jednostka.wspolrzedne[1]} {jednostka.wspolrzedne[0]})', jednostka.id))
@@ -152,6 +153,7 @@ def create_jednostki_root(root):
     jednostki_root = Toplevel(root)
     jednostki_root.title("Jednostki straży pożarnej")
     jednostki_root.geometry("1024x760")
+
 
     # ramki do porządkowania struktury
 
@@ -223,18 +225,52 @@ def create_jednostki_root(root):
     map_widget.set_position(52.2, 21.0)
     map_widget.set_zoom(8)
     map_widget.grid(row=2, column=0, columnspan=8)
-    # marker_WAT = map_widget.set_marker(52.25462674857218, 20.900225912403783, text="WAT")
 
+    lista_jednostek(listbox_jednostki_strazy)
+    for jednostka in jednostki:
+        jednostka.set_marker_jednostki(map_widget)
 
     return(root)
 
-pracownicy = []
+
 
 class Pracownik:
     def __init__(self, imie, nazwisko, jednostka):
         self.imie = imie
         self.nazwisko = nazwisko
         self.jednostka = jednostka
+
+pracownicy = [
+    Pracownik("Piotr", "Kowalski", "OSP WWA"),
+    Pracownik("Agnieszka", "Wiśniewska", "OSP WWA"),
+    Pracownik("Jakub", "Zieliński", "OSP WWA"),
+    Pracownik("Katarzyna", "Kaczmarek", "OSP WWA"),
+    Pracownik("Michał", "Szymański", "OSP WWA"),
+
+    Pracownik("Szymon", "Dąbrowski", "SP KBK"),
+    Pracownik("Wiktoria", "Kubiak", "SP KBK"),
+    Pracownik("Patryk", "Jankowski", "SP KBK"),
+    Pracownik("Aleksandra", "Mazurek", "SP KBK"),
+    Pracownik("Łukasz", "Kowalczyk", "SP KBK"),
+
+    Pracownik("Julia", "Pawlak", "OSP PŁK"),
+    Pracownik("Maciej", "Rutkowski", "OSP PŁK"),
+    Pracownik("Ewa", "Krupa", "OSP PŁK"),
+    Pracownik("Tomasz", "Górski", "OSP PŁK"),
+    Pracownik("Magdalena", "Sikora", "OSP PŁK"),
+
+    Pracownik("Dominik", "Czajka", "SP SDL"),
+    Pracownik("Kinga", "Wojciechowska", "SP SDL"),
+    Pracownik("Rafał", "Kamiński", "SP SDL"),
+    Pracownik("Monika", "Kozłowska", "SP SDL"),
+    Pracownik("Kamil", "Zawadzki", "SP SDL"),
+
+    Pracownik("Anna", "Majewska", "OSP ŻRD"),
+    Pracownik("Bartłomiej", "Kwiatkowski", "OSP ŻRD"),
+    Pracownik("Iwona", "Szymczak", "OSP ŻRD"),
+    Pracownik("Paweł", "Kruk", "OSP ŻRD"),
+    Pracownik("Joanna", "Włodarczyk", "OSP ŻRD"),
+]
 
 def lista_pracownikow(listbox_pracownicy_strazy):
     listbox_pracownicy_strazy.delete(0, END)
@@ -356,23 +392,29 @@ def create_pracownicy_root(root):
 
     label_szczegoly_pracownikow.grid(row=0, column=0, sticky=W)
     label_imie_szczegoly_pracownikow.grid(row=1, column=0, sticky=W)
-    label_imie_szczegoly_pracownikow_wartosc.grid(row=1, column=1)
-    label_nazwisko_szczegoly_pracownikow.grid(row=1, column=2)
-    label_nazwisko_szczegoly_pracownikow_wartosc.grid(row=1, column=3)
-    label_jednostka_szegoly_pracownikow.grid(row=1, column=4)
-    label_jednostka_szegoly_pracownikow_wartosc.grid(row=1, column=5)
+    label_imie_szczegoly_pracownikow_wartosc.grid(row=1, column=0)
+    label_nazwisko_szczegoly_pracownikow.grid(row=1, column=1)
+    label_nazwisko_szczegoly_pracownikow_wartosc.grid(row=1, column=2)
+    label_jednostka_szegoly_pracownikow.grid(row=1, column=3)
+    label_jednostka_szegoly_pracownikow_wartosc.grid(row=1, column=4)
 
+    lista_pracownikow(listbox_pracownicy_strazy)
     return (root)
 
-pozary = []
+
 
 class Pozar:
-    def __init__(self, miejscowosc, jednostka, map_widget):
+    def __init__(self, miejscowosc, jednostka):
+        self.marker = None
         self.miejscowosc = miejscowosc
         self.jednostka = jednostka
         self.wspolrzedne = Pozar.wspolrzedne(self)
-        self.marker = map_widget.set_marker(self.wspolrzedne[0], self.wspolrzedne[1],
-                                             text=f"{self.jednostka}")
+
+
+    def set_marker_pozary(self, map_widget):
+        self.marker = map_widget.set_marker(float(self.wspolrzedne[0]), float(self.wspolrzedne[1]),
+                                            text=f"{self.jednostka}")
+        markers.append(self.marker)
 
     def wspolrzedne(self) -> list:
         url: str = f'https://pl.wikipedia.org/wiki/{self.miejscowosc}'
@@ -383,22 +425,36 @@ class Pozar:
             float(response_html.select('.longitude')[1].text.replace(",", "."))
         ]
 
-
+pozary = [
+    Pozar("Warszawa", "OSP WWA"),
+    Pozar("Kobyłka", "SP KBK"),
+    Pozar("Płock", "OSP PŁK"),
+    Pozar("Siedlce", "SP SDL"),
+    Pozar("Żyrardów", "OSP ŻRD"),
+]
+def czyszczenie_markerow(markers) -> None:
+    for marker in markers:
+        marker.delete()
+    markers.clear()
 def lista_pozarow(listbox_pozary, map_widget):
     listbox_pozary.delete(0, END)
     for idx, pozar in enumerate(pozary):
         listbox_pozary.insert(idx, f'{pozar.miejscowosc} {pozar.jednostka}')
+    pozar.marker = map_widget.set_marker(pozar.wspolrzedne[0], pozar.wspolrzedne[1],
+                                         text=f"{pozar.jednostka}")
 
 
 def dodaj_pozar(entry_miejscowosc, entry_jednostka, listbox_pozary, map_widget):
+    i = listbox_pozary.index(ACTIVE)
+    pozar = pozary[i]
     miejscowosc = entry_miejscowosc.get()
     jednostka = entry_jednostka.get()
 
     print(miejscowosc, jednostka)
-    pozary.append(Pozar(miejscowosc, jednostka, map_widget))
+    pozary.append(Pozar(miejscowosc, jednostka))
+    pozar.set_marker_pozary(map_widget)
 
     lista_pozarow(listbox_pozary, map_widget)
-
     entry_miejscowosc.delete(0, END)
     entry_jednostka.delete(0, END)
 
@@ -424,16 +480,17 @@ def edytuj_pozar(listbox_pozary, entry_miejscowosc, entry_jednostka, button_doda
     i = listbox_pozary.index(ACTIVE)
     entry_miejscowosc.insert(0, pozary[i].miejscowosc)
     entry_jednostka.insert(0, pozary[i].jednostka)
-
+    pozary[i].marker.delete()
     button_dodaj_pozar.config(text="Zapisz zmiany", command=lambda: aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar, map_widget))
 
 def aktualizuj_pozar(i, entry_miejscowosc, entry_jednostka, listbox_pozary, button_dodaj_pozar, map_widget):
     pozary[i].miejscowosc = entry_miejscowosc.get()
     pozary[i].jednostka = entry_jednostka.get()
     pozary[i].wspolrzedne = Pozar.wspolrzedne(pozary[i])
-    pozary[i].marker.delete()
+
     pozary[i].marker = map_widget.set_marker(pozary[i].wspolrzedne[0], pozary[i].wspolrzedne[1],
                                             text=f"{pozary[i].jednostka}")
+    pozary[i].marker.delete()
     lista_pozarow(listbox_pozary, map_widget)
     button_dodaj_pozar.config(text="Dodaj pracownika", command=lambda: dodaj_pozar)
     entry_miejscowosc.delete(0, END)
@@ -509,4 +566,8 @@ def create_pozary_root(root):
     map_widget.set_zoom(8)
     map_widget.grid(row=2, column=0, columnspan=8)
 
+    lista_pozarow(listbox_pozary, map_widget)
+
+    for pozar in pozary:
+        pozar.set_marker_pozary(map_widget)
     return (root)
